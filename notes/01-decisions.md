@@ -13,7 +13,7 @@ Frozen choices. Each has a date and a one-line reason. Change = new dated entry,
   all experiments run on our own split anyway. (Noted: keeping them separate
   would allow extra analysis; rejected for simplicity.)
 - **2026-09-03 · Split.** Our own train/val split, val weighted toward
-  categories 2 and 4 (novel objects); cats 1 and 3 are re-posed copies of a
+  categories 2 and 4 (novel objects); categories 1 and 3 are re-posed copies of a
   few objects. Exact manifest to be produced in `data/`.
 
 ## Training

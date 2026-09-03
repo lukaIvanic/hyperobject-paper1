@@ -72,3 +72,53 @@ per-image-memorize.
 - Q2. Unclamped training: inside R0 (disclosed delta) or a separate arm?
 - Q3. E4 at 100 ep only, or also at 1000 (66 min)?
 - Q4. Do we spend one Kaggle submission on E0 for the external anchor?
+
+---
+
+# v2 amendments (2026-09-03, after discussion)
+
+## Ordering
+
+1. Data prep (masks, split, visual audit — the table cut is per-image where
+   the rig moved; a constant row is only the starting guess).
+2. **M-series: the metric study, model-free, before any training.**
+3. Quick runs (100 ep): E7 seeds, E2-100, E3 (three arms), E4.
+4. 1000-ep runs last: E1 (reference), E0 (parity), E3 object-only long.
+   E2's "where late gains land" and E5a's epoch sweep wait for E1;
+   E5a can be piloted on the 100-ep checkpoints.
+
+Split honesty (H3) is read from the 100-ep run's per-category train-vs-val
+readout already; E1 only confirms it at length.
+
+## M-series — what does a score mean? (synthetic predictors)
+
+Idea (Luka): take the GT, degrade it in a controlled, intuitive way, score
+the degraded cube against the original with the recovered formula, and
+read off what "actual performance" each score level corresponds to, per
+metric and per region. Precedent: the August resolution ladder (pooled GT
+upsampled: 512² → 0.535, 256² → 0.307, 128² → 0.136) and the degenerate
+Kaggle submissions (floor 0.14). Cost: minutes; no model.
+
+Each row is a degradation with a knob swept wide enough to span the scale:
+
+| id | degradation ("synthetic predictor") | knob | what it isolates |
+|---|---|---|---|
+| M1 | keep every k-th band, linearly interpolate the rest | k = 2, 3, 4, 6 | spectral detail vs the smooth low-rank prior; SAM/SID/ERGAS sensitivity to fine spectral structure |
+| M2 | project each spectrum onto top-k PCA components of train | k = 2, 4, 8, 12 | score of a perfect low-rank predictor (4 PCs = 99.3% variance) |
+| M3 | spatial pool p then bilinear upsample | p = 2, 4, 8 | spatial component; redo of the August ladder under regions |
+| M4 | iid Gaussian noise σ on every value | σ = 0.002 … 0.05 | brightness dependence: same σ → SAM by decile; how dark pixels dominate |
+| M5 | spatial smoothing (box/Gaussian, w = 3, 5, 11) | w | how much the score *penalizes a cleaner prediction* — the stripes are in the GT, a denoised prediction loses; August: SAM(GT, destriped GT) ≈ 8° |
+| M6 | column-template removal (destripe) | — | M5's targeted version: perfect prediction minus the static stripes |
+| M7 | global / per-band gain (1+ε) | ε = ±1 … ±10% | what SAM ignores (scale) and what ERGAS/PSNR punish |
+| M8 | clamp values below t to 0 | t = 0.005, 0.02 | SID's log blow-up on zeros; the floor lever |
+| M9 | constant cubes (zeros, train mean, ones) | — | floor; cross-check against the Kaggle 0.140 / 0.140 / 0.091 |
+
+Every row: six submetrics + SSC, full frame and per region (object / table /
+background), on the val images. Two derived views: (a) SSC vs knob, all rows
+on one axis — the "ruler"; (b) for M4, SAM by brightness decile at one σ —
+the dark-pixel mechanism in one figure. Plus the analytic part: formula,
+∂SSC/∂metric at a few operating points, and the exponential's knee.
+
+Caution on knobs: dropping 1 pixel in 100 and interpolating is too mild to
+register (spectra are smooth, 4 PCs ≈ 99%); sweep until the row spans
+~0.14 → ~1.0 so each metric's knee is visible.
