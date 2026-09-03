@@ -42,7 +42,7 @@ H2. Masking out background + table should therefore help most in the short
     regime (100 ep target instead of 1000), because the model spends capacity
     on the object instead of on noise.
 H3. Train and val losses showed no difference — concerning; suspected to be
-    an artifact of the official split (cats 1/3 are re-posed copies of the
+    an artifact of the official split (categories 1/3 are re-posed copies of the
     same few objects).
 H4. The SSC score is doubly sensitive: submetrics (SAM, SID, ERGAS) blow up
     on low-intensity pixels and outliers (which may just be the unlearnable
