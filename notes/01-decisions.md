@@ -40,6 +40,10 @@ Frozen choices. Each has a date and a one-line reason. Change = new dated entry,
   The 1000-epoch baseline number (Kaggle 0.23888, local proxy curve) is the
   parity check that the port preserved the recipe.
 
+- **2026-09-04 · Kaggle submissions are not scarce.** The competition is
+  closed and the limit is 100/day, so T7 (the parity run) — and any run
+  whose external anchor is useful — gets submitted. No rationing.
+
 ## Reporting
 
 - **2026-09-03 · Readout.** Six submetrics per region are primary; SSC

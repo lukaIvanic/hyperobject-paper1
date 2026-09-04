@@ -118,7 +118,7 @@ quick runs share one recipe.
 |---|---|---|---|---|---|---|
 | T5 | **the long reference** | what do 1000 epochs buy over 100? | nothing but length | T1 the working run | per-region, per-submetric curves over 1000 epochs — *where* the late gains land; confirms split honesty at length | 66 min |
 | T6 | **the long masked run** | is the masking gain transient? | the winning loss region from T3 | T5 the long reference | the gap at 1000 epochs vs the gap at 100 | 66 min |
-| T7 | **the parity run** | did the rewrite preserve the recipe? | the *official* split instead of ours | the August exp-00 record | curve in family with exp-00; Kaggle 0.239 if we submit | 66 min |
+| T7 | **the parity run** | did the rewrite preserve the recipe? | the *official* split instead of ours | the August exp-00 record | curve in family with exp-00; Kaggle 0.239 — submitted (see decisions) | 66 min |
 | T8 | **the speedup re-measure** | is the ≈1000× real? | one epoch as shipped vs one epoch on our pipeline | — | wall time per epoch; the August per-fix ladder is cited as the record | ≈ 70 min |
 
 ## Seeds (T9)
@@ -142,5 +142,3 @@ per-region train-vs-val curves are a free third angle.
 ## Open decisions
 
 - Should T4 (the input) also be run at 1000 epochs (another 66 min)?
-- Do we spend one Kaggle submission on T7 (the parity run) for the external
-  anchor?
