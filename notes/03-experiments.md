@@ -141,4 +141,4 @@ per-region train-vs-val curves are a free third angle.
 
 ## Open decisions
 
-- Should T4 (the input) also be run at 1000 epochs (another 66 min)?
+None at the moment. T4 (the input) stays at 100 epochs only.

@@ -44,6 +44,9 @@ Frozen choices. Each has a date and a one-line reason. Change = new dated entry,
   closed and the limit is 100/day, so T7 (the parity run) — and any run
   whose external anchor is useful — gets submitted. No rationing.
 
+- **2026-09-04 · T4 (the input) runs at 100 epochs only.** No 1000-epoch
+  arm.
+
 ## Reporting
 
 - **2026-09-03 · Readout.** Six submetrics per region are primary; SSC
