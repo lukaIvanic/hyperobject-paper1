@@ -22,7 +22,7 @@ fp16 AMP, official batch size, official (repaired) code semantics — on our
 optimized pipeline and our split. Two deltas from "as shipped", both from
 the August audit, both disclosed: (i) train unclamped, clamp + floor 0.005
 at eval (the dead phase-channel fix); (ii) numerically repaired metrics.
-Open: whether (i) lives inside R0 or is its own arm (Q2).
+Open: whether (i) lives inside R0 or is its own arm (Q1).
 
 Every run logs, every K epochs, on val and on a fixed train subset: the six
 submetrics per region (object / table / background / full) and SSC. CSV
