@@ -14,3 +14,16 @@ Dated entries, newest last. What was done, what was found, what changed.
 - Repo cloned to `/root/hyperobject-paper1`; data root `/root/data`.
 - Next: Kaggle token on the box → download the official archive → extract
   → build the per-image `.npy` cache → `02-provenance.md` as code is ported.
+
+## 2026-09-04 — data on the box
+
+- Official archive downloaded with the Kaggle API: 37.1 GB in 281 s
+  (≈132 MB/s), `/root/data/track1.zip`. Extracted in 182 s to `/root/data/raw/`.
+- Layout: `train/{hsi_61,mosaic}` 167 pairs (34 GB of HDF5); `test-public/
+  {hsi_61,mosaic}` 11 pairs (ground truth included); `test-private/mosaic`
+  4 mosaics, no ground truth. So 178 cubes, 182 mosaics.
+- Formats: cube `.h5` with datasets `cube` (1024, 1024, 61) float32 HWC and
+  `wavelengths` (61,) float32; mosaic `.npy` (1024, 1024) float32 in [0, 1].
+- Next: `src/build_cache.py` — one uncompressed `.npy` per cube (HWC
+  contiguous, so it pins zero-copy as a channels-last tensor), verified
+  against the HDF5 read; then regions and split.
