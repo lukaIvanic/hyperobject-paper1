@@ -90,7 +90,7 @@ relative to the row it names.
 | T3 | input: mosaic handled or not | mosaic + aligned bilinear demosaic RGB | T1 | 100 | all regions; expect render-side metrics to move most | 7 min |
 | T4 | what do 1000 epochs buy? (H1) | R0 | T1 | 1000 | per-region, per-submetric curves over 1000 ep — *where* late gains land; confirms H3 at length | 66 min |
 | T5 | is the masked gain transient? | best T2 loss region | T4 | 1000 | gap to T4 at 1000 vs gap to T1 at 100 | 66 min |
-| T6 | did the rewrite preserve the recipe? | R0 on the *official* split | exp-00 record | 1000 | curve in family; Kaggle 0.239 if submitted (Q4) | 66 min |
+| T6 | did the rewrite preserve the recipe? | R0 on the *official* split | exp-00 record | 1000 | curve in family; Kaggle 0.239 if submitted (Q3) | 66 min |
 | T7 | the speedup, re-measured | 1 epoch as shipped vs 1 epoch R0 | — | 1 ep | wall per epoch; the August per-fix ladder cited as the record | ≈ 70 min |
 | T8 | error bars — **after the full pass, not before** | T1 config, seeds ×3 | T1 | 100 ×3 | spread of each submetric per region; sets the noise floor for T1–T3 | 21 min |
 
