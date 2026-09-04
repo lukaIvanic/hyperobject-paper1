@@ -24,6 +24,13 @@ Frozen choices. Each has a date and a one-line reason. Change = new dated entry,
   no intermediate rungs unless an experiment needs one. (Luka: "get the point
   across as simply as possible".)
 
+- **2026-09-04 · The recipe is the official one as shipped, clamp included.**
+  The training-time clamp is not folded in as a "fix"; it gets a 100-epoch
+  ablation of its own, read in the light of the metric study's zero-clamping
+  row. The long runs use whichever setting wins.
+- **2026-09-04 · Seeds run last**, after the full pass, so an upstream change
+  does not cost them twice.
+
 ## Code
 
 - **2026-09-03 · One file if possible.** New trainer written minimal, clean,
