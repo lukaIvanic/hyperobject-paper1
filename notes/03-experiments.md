@@ -9,8 +9,9 @@ the baseline runs ≈ 4 s/epoch on our pipeline → 100 ep ≈ 7 min, 1000 ep �
 
 1. **Data prep** — masks, split, visual audit.
 2. **M-series** — the metric study, model-free, before any training.
-3. **Quick runs** (100 ep) — seeds, training length, loss region, input.
-4. **Long runs** (1000 ep) — last; nothing quick depends on them.
+3. **Quick runs** (100 ep, T1–T3) — the working run, loss region, input.
+4. **Long runs** (1000 ep, T4–T6) and the speedup re-measure.
+5. **Seeds ×3** (T8) — only after the whole pass, so a change upstream does not cost them twice.
 
 ---
 
@@ -35,8 +36,8 @@ committed under `logs/`. Every experiment changes exactly one thing.
   row boundary; a single constant row is only the starting guess — the rig
   moves in some images, so the cut is verified per image on contact sheets.
   Background = the rest.
-- Split manifest: val weighted toward cats 2/4 (novel objects); no adjacent
-  indices (adjacent = same book, cover/spine); cat-4 picks prefer
+- Split manifest: val weighted toward categories 2/4 (novel objects); no adjacent
+  indices (adjacent = same book, cover/spine); category-4 picks prefer
   single-shot objects; the official public-test 11 fold into train.
 - Contact sheets for a visual sign-off before anything runs.
 
@@ -77,46 +78,39 @@ the formula, ∂SSC/∂metric at a few operating points, the exponential's
 knee. Outcome: a table a reader can use to translate any score, ours or the
 leaderboard's, into a concrete kind and size of error.
 
-## 3. Training experiments
+## 3. Training experiments (in execution order)
 
-| # | question | arms (one change each) | length | readout that decides | cost |
-|---|---|---|---|---|---|
-| E7 | error bars | R0, seeds ×3 | 100 | spread of each submetric per region — the noise floor for every 100-ep comparison | 21 min |
-| E2 | what do 1000 epochs buy over 100? (H1) | R0 @100 vs E1 @1000 | 100 | per-region, per-submetric; later, E1's curves: *where* late gains land | 7 min |
-| E3 | loss region (H2) | full frame (= E2) / object only / object + table | 100 ×3 | object-region submetrics | 14 min |
-| E4 | input: mosaic handled or not | raw mosaic vs mosaic + aligned bilinear demosaic RGB | 100 | all regions; expect render-side metrics to move most | 7 min |
-| H3 | split honesty | read from any 100-ep run | — | per-category train-vs-val gap: cats 1/3 ≈ 0, cats 2/4 ≫ 0 | free |
-| E5 | is late gain memorized static noise? (H1) | see below | eval-only first | stripe presence in the *output*, with and without stripes in the input | minutes |
-| E1 | 1000-ep reference on our split | R0 | 1000 | per-region curves over 1000 ep; confirms H3 at length; checkpoints for E5 | 66 min |
-| E3L | is the masked gain transient? | object-only loss | 1000 | vs E1 at 1000: gap gone or not | 66 min |
-| E0 | did the rewrite preserve the recipe? | R0, *official* split | 1000 | curve in family with exp-00; Kaggle 0.239 if submitted (Q4) | 66 min |
-| ENG | the speedup, re-measured | 1 epoch as shipped vs 1 epoch R0 | 1 ep | wall per epoch; the August per-fix ladder cited as the record | ≈ 70 min |
+Every run is R0 on our split unless stated. Each row changes one thing
+relative to the row it names.
 
-Total ≈ 4.5 h of GPU, quick runs ≈ 50 min of it.
+| # | question | arm | vs | length | readout that decides | cost |
+|---|---|---|---|---|---|---|
+| T1 | the working run; also: split honesty (H3) | R0 | — | 100 | per-region submetrics; per-category train-vs-val gap: cats 1/3 ≈ 0, cats 2/4 ≫ 0 | 7 min |
+| T2 | loss region (H2) | loss on object only; loss on object + table | T1 (full-frame loss) | 100 ×2 | object-region submetrics | 14 min |
+| T3 | input: mosaic handled or not | mosaic + aligned bilinear demosaic RGB | T1 | 100 | all regions; expect render-side metrics to move most | 7 min |
+| T4 | what do 1000 epochs buy? (H1) | R0 | T1 | 1000 | per-region, per-submetric curves over 1000 ep — *where* late gains land; confirms H3 at length | 66 min |
+| T5 | is the masked gain transient? | best T2 loss region | T4 | 1000 | gap to T4 at 1000 vs gap to T1 at 100 | 66 min |
+| T6 | did the rewrite preserve the recipe? | R0 on the *official* split | exp-00 record | 1000 | curve in family; Kaggle 0.239 if submitted (Q4) | 66 min |
+| T7 | the speedup, re-measured | 1 epoch as shipped vs 1 epoch R0 | — | 1 ep | wall per epoch; the August per-fix ladder cited as the record | ≈ 70 min |
+| T8 | error bars — **after the full pass, not before** | T1 config, seeds ×3 | T1 | 100 ×3 | spread of each submetric per region; sets the noise floor for T1–T3 | 21 min |
 
-### E5 — the static-noise discriminator
+T1–T3 ≈ 30 min of GPU; T4–T6 ≈ 3.3 h; T8 last, once nothing upstream is
+going to change (a change would otherwise cost the seeds again).
 
-Template T[b, x] = per-(band, column) mean of high-passed GT over the train
-set (the fixed-pattern stripes; August: correlates 0.95–0.998 across
-images).
+## 4. Secondary — needs its own discussion before it is planned
 
-- **E5a, eval-only (do first; pilot on 100-ep checkpoints, sweep on E1's).**
-  Correlation of the prediction's column profile with T, per epoch. Then
-  the same checkpoints on an input with T's projection removed from the
-  mosaic. Stripes vanish → copied from the input, not memorized. Stripes
-  persist and grow with epoch → memorized in weights; H1 supported.
-- **E5b, training (only if E5a is ambiguous).** Two 1000-ep arms: targets
-  with T subtracted (static noise removed) vs targets with a fresh random
-  column pattern of the same amplitude per image (noise made non-static).
-  If H1 holds, both arms' late-epoch gains vanish. 2 × 66 min.
-- Free from E1's logs: train-vs-val gap per region vs epoch. Memorizing
-  *static* (shared) noise gives no gap; memorizing per-image noise gives a
-  growing gap. With E5a this separates copy / static-memorize /
-  per-image-memorize.
+**The static-noise discriminator (H1).** Is the late-epoch gain memorized
+static noise? Hard to get right; not on the critical path. Sketch kept for
+the discussion: template T[b, x] = per-(band, column) mean of high-passed
+train GT (August: correlates 0.95–0.998 across images). Eval-only probe on
+T4 checkpoints: stripe presence in the *output* vs epoch, then the same
+checkpoints on an input with T projected out — vanish means copied from the
+input, persist-and-grow means memorized. Training arms (destriped targets;
+per-image randomized stripes) only if the probe is ambiguous. T4's
+per-region train-vs-val curves are a free third angle.
 
 ## Open questions
 
-- Q1. E5b: commit 2.2 h now, or wait for E5a?
-- Q2. Unclamped training: inside R0 as a disclosed delta, or its own arm?
-- Q3. E4 at 100 ep only, or also at 1000?
-- Q4. One Kaggle submission on E0 for the external anchor?
+- Q1. Unclamped training: inside R0 as a disclosed delta, or its own arm?
+- Q2. T3 at 100 ep only, or also at 1000?
+- Q3. One Kaggle submission on T6 for the external anchor?
