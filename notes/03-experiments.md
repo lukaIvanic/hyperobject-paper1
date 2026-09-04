@@ -1,116 +1,144 @@
-# 03 — Experiment plan (v2, 2026-09-03 — under discussion)
+# Experiment plan (v3, 2026-09-04 — under discussion)
 
-Architecture fixed: the official Raw2HSI baseline. Two training lengths
-only: 100 epochs (working) and 1000 (the official reference). One RTX 5090;
-the baseline runs ≈ 4 s/epoch on our pipeline → 100 ep ≈ 7 min, 1000 ep ≈
-66 min, plus a 43 s preload.
+One architecture: the official Raw2HSI baseline. Two training lengths:
+**100 epochs** (the working length) and **1000 epochs** (the official
+reference). One RTX 5090. The baseline runs ≈ 4 s/epoch on our pipeline,
+so a 100-epoch run is ≈ 7 min and a 1000-epoch run ≈ 66 min, plus a 43 s
+preload.
 
 ## Order of work
 
-1. **Data prep** — masks, split, visual audit.
-2. **M-series** — the metric study, model-free, before any training.
-3. **Quick runs** (100 ep, T1–T3) — the working run, loss region, input.
-4. **Long runs** (1000 ep, T4–T6) and the speedup re-measure.
-5. **Seeds ×3** (T8) — only after the whole pass, so a change upstream does not cost them twice.
+1. Data prep — masks, split, visual audit.
+2. The metric study — model-free, before any training.
+3. The quick runs — 100 epochs each, ≈ 40 min of GPU in total.
+4. The long runs — 1000 epochs each, ≈ 3.3 h in total, plus the speedup
+   re-measure.
+5. Seeds — three repeats of the working run, only after the whole pass,
+   so that a change upstream does not cost them twice.
 
 ---
 
-## 0. The fixed recipe (R0)
+## The recipe
 
-The official baseline recipe verbatim — AdamW 2e-4 cosine, L1 + 0.1·SAM,
-fp16 AMP, official batch size, official (repaired) code semantics — on our
-optimized pipeline and our split. Two deltas from "as shipped", both from
-the August audit, both disclosed: (i) train unclamped, clamp + floor 0.005
-at eval (the dead phase-channel fix); (ii) numerically repaired metrics.
-Open: whether (i) lives inside R0 or is its own arm (Q1).
+The official baseline recipe **exactly as shipped**: AdamW 2e-4 with cosine
+decay, loss L1 + 0.1·SAM, fp16 mixed precision, official batch size, and
+the model's output clamped to [0, 1] during training. It runs on our
+optimized pipeline (same mathematics, ≈1000× faster) and on our split. The
+only delta is the August code repairs without which the shipped script
+does not run (an undefined variable, a wrong reduction axis in the
+metrics).
 
-Every run logs, every K epochs, on val and on a fixed train subset: the six
-submetrics per region (object / table / background / full) and SSC. CSV
-committed under `logs/`. Every experiment changes exactly one thing.
+The clamp is the one thing we already know is problematic (August found
+output channels that drift negative die permanently under it). It is *not*
+folded into the recipe by decision. It gets its own quick run — see
+"the clamp ablation" — and the metric study first tells us how to read
+that run's result.
 
-## 1. Data prep
+Every run logs, every few epochs, on the validation images and on a fixed
+subset of training images: the six submetrics (SAM, SID, ERGAS, PSNR,
+SSIM, ΔE00) for each region (object, table, background, full frame) and the
+composite score. Logs are CSV, committed. Every experiment changes exactly
+one thing against a named comparison run.
 
-- Region masks for all 178 images. Object = the August recipe (brightness
-  threshold on the GT, morphology, CFA-pack aligned; the white sheet stays
-  inside object). Table = the dark rail and clamp below the sheet, cut by a
-  row boundary; a single constant row is only the starting guess — the rig
-  moves in some images, so the cut is verified per image on contact sheets.
-  Background = the rest.
-- Split manifest: val weighted toward categories 2/4 (novel objects); no adjacent
-  indices (adjacent = same book, cover/spine); category-4 picks prefer
-  single-shot objects; the official public-test 11 fold into train.
+## Data prep
+
+- Region masks for all 178 images. *Object* = the August recipe
+  (brightness threshold on the ground truth, morphology, aligned to the
+  2×2 filter pattern); the white sheet stays inside the object. *Table* =
+  the dark rail and clamp below the sheet, cut by a row boundary — a
+  single constant row is only the starting guess, the rig moves in some
+  images, so each cut is checked on contact sheets. *Background* = the
+  rest.
+- Split manifest: validation weighted toward categories 2 and 4 (the novel
+  objects); never two adjacent indices (adjacent = the same book, cover and
+  spine); category-4 picks prefer single-shot objects; the 11 official
+  public-test images fold into training.
 - Contact sheets for a visual sign-off before anything runs.
 
-## 2. M-series — what does a score mean? (model-free)
+## The metric study — what does a score mean?
 
-Take the ground truth, degrade it in a controlled and intuitive way, score
-the degraded cube against the original with the recovered formula, and
-read off what "actual performance" each score level corresponds to, per
-metric and per region. No model. Minutes per row.
+Model-free. Take the ground truth, degrade it in a controlled, intuitive
+way, score the degraded cube against the original with the recovered
+formula, and read off what actual performance each score level corresponds
+to — per metric and per region. Minutes per row.
 
-Precedents: the August resolution ladder (pooled GT upsampled: 512² →
-0.535, 256² → 0.307, 128² → 0.136) and the degenerate Kaggle submissions
-(floor 0.140).
+Precedents: the August resolution ladder (pooled ground truth upsampled
+back: 512² scored 0.535, 256² scored 0.307, 128² scored 0.136) and the
+degenerate Kaggle submissions (floor 0.140).
 
-**The principle of each sweep:** start from an error a person would call
+**The principle of every sweep:** start from an error a person would call
 trivial and unimportant — one pixel in a hundred interpolated, one band in
 ten — and measure exactly how much the score punishes it. Then make the
 error progressively less trivial and follow the response. The curve from
-"trivial" to "severe" *is* the result; nothing is pre-judged as too mild
-to register.
+trivial to severe *is* the result; nothing is pre-judged as too mild to
+register.
 
-| id | synthetic predictor | knob, from trivial upward | what it isolates |
-|---|---|---|---|
-| M1 | drop pixels, interpolate them back (bilinear) | 1 in 100 → 1 in 10 → 1 in 2 → pool 2/4/8 | spatial error; the spatial component and its spectral side-effects |
-| M2 | drop bands, interpolate them back (linear) | 1 in 10 → 1 in 4 → every other band | fine spectral structure vs the smooth prior; SAM/SID/ERGAS sensitivity |
-| M3 | project spectra onto top-k PCA components (train-fit) | k = 12 → 8 → 4 → 2 | score of a perfect low-rank predictor (4 PCs ≈ 99.3% variance) |
-| M4 | add iid Gaussian noise σ | σ = 0.001 → 0.05 | brightness dependence: one σ, SAM by brightness decile — the dark-pixel mechanism |
-| M5 | spatial smoothing (box / Gaussian) | w = 3 → 11 | how much the score penalizes a prediction *cleaner* than the GT |
-| M6 | remove the static column template (destripe) | — | M5 targeted: a perfect prediction minus the stripes. August: SAM(GT, destriped GT) ≈ 8° |
-| M7 | global or per-band gain (1+ε) | ε = ±1% → ±10% | what SAM ignores (scale) vs what ERGAS/PSNR punish |
-| M8 | clamp values below t to zero | t = 0.001 → 0.02 | SID's log blow-up on exact zeros; the submission-floor lever |
-| M9 | constant cubes: zeros, train-mean spectrum, ones | — | the floor; cross-check vs Kaggle 0.140 / 0.140 / 0.091 |
+| synthetic predictor | knob, from trivial upward | what it isolates |
+|---|---|---|
+| **dropped pixels**, interpolated back (bilinear) | 1 in 100 → 1 in 10 → 1 in 2 → pool 2, 4, 8 | spatial error: the spatial component and its spectral side-effects |
+| **dropped bands**, interpolated back (linear) | 1 in 10 → 1 in 4 → every other band | fine spectral structure vs the smooth prior; SAM/SID/ERGAS sensitivity |
+| **low-rank spectra** (projection onto the top-k principal components of the training set) | k = 12 → 8 → 4 → 2 | the score of a perfect predictor that knows only the low-dimensional structure (4 components ≈ 99.3% of variance) |
+| **added noise** (iid Gaussian, one σ everywhere) | σ = 0.001 → 0.05 | brightness dependence: the same σ, SAM by brightness decile — the dark-pixel mechanism |
+| **smoothing** (box or Gaussian) | width 3 → 11 | how much the score penalizes a prediction *cleaner* than the ground truth |
+| **destriping** (the static column template removed) | — | smoothing, targeted: a perfect prediction minus the stripes. August: SAM between the ground truth and its own destriped version ≈ 8° |
+| **gain error** (multiply by 1+ε, global or per band) | ε = ±1% → ±10% | what SAM ignores (scale) vs what ERGAS and PSNR punish |
+| **zero-clamping** (values below t set to 0) | t = 0.001 → 0.02 | SID's logarithm blowing up on exact zeros; the submission-floor lever; the eval-side half of the clamp question |
+| **constant cubes** (zeros, training-mean spectrum, ones) | — | the floor; cross-check against Kaggle 0.140 / 0.140 / 0.091 |
 
-Every row: six submetrics + SSC, full frame and per region, on the val
-images. Derived views: (a) SSC vs knob for all rows on one axis — the
-"ruler"; (b) M4 at one σ, SAM by brightness decile; (c) the analytic part:
-the formula, ∂SSC/∂metric at a few operating points, the exponential's
-knee. Outcome: a table a reader can use to translate any score, ours or the
-leaderboard's, into a concrete kind and size of error.
+Every row: six submetrics plus the composite, full frame and per region, on
+the validation images. Derived views: the "ruler" (composite score vs knob,
+all rows on one axis); the noise row at one σ, SAM by brightness decile;
+and the analytic part — the formula, the slope of the composite against
+each submetric at a few operating points, the exponential's knee. Outcome:
+a table a reader can use to translate any score, ours or the leaderboard's,
+into a concrete kind and size of error.
 
-## 3. Training experiments (in execution order)
+## The quick runs (100 epochs each)
 
-Every run is R0 on our split unless stated. Each row changes one thing
-relative to the row it names.
+Every run is the recipe on our split unless stated. Each changes one thing
+against the run it names.
 
-| # | question | arm | vs | length | readout that decides | cost |
-|---|---|---|---|---|---|---|
-| T1 | the working run; also: split honesty (H3) | R0 | — | 100 | per-region submetrics; per-category train-vs-val gap: cats 1/3 ≈ 0, cats 2/4 ≫ 0 | 7 min |
-| T2 | loss region (H2) | loss on object only; loss on object + table | T1 (full-frame loss) | 100 ×2 | object-region submetrics | 14 min |
-| T3 | input: mosaic handled or not | mosaic + aligned bilinear demosaic RGB | T1 | 100 | all regions; expect render-side metrics to move most | 7 min |
-| T4 | what do 1000 epochs buy? (H1) | R0 | T1 | 1000 | per-region, per-submetric curves over 1000 ep — *where* late gains land; confirms H3 at length | 66 min |
-| T5 | is the masked gain transient? | best T2 loss region | T4 | 1000 | gap to T4 at 1000 vs gap to T1 at 100 | 66 min |
-| T6 | did the rewrite preserve the recipe? | R0 on the *official* split | exp-00 record | 1000 | curve in family; Kaggle 0.239 if submitted (Q3) | 66 min |
-| T7 | the speedup, re-measured | 1 epoch as shipped vs 1 epoch R0 | — | 1 ep | wall per epoch; the August per-fix ladder cited as the record | ≈ 70 min |
-| T8 | error bars — **after the full pass, not before** | T1 config, seeds ×3 | T1 | 100 ×3 | spread of each submetric per region; sets the noise floor for T1–T3 | 21 min |
+| run | question | what changes | compared against | readout that decides | cost |
+|---|---|---|---|---|---|
+| **the working run** | the reference for everything at 100 epochs; also *split honesty*: is the train/val gap real once the split is honest? | nothing | — | per-region submetrics; per-category train-vs-val gap: categories 1 and 3 ≈ 0, categories 2 and 4 ≫ 0 | 7 min |
+| **the clamp ablation** | what does the training-time clamp do? | output unclamped during training; clamped and floored at 0.005 for evaluation | the working run | dead output channels (fraction of exact zeros per band); SID and ERGAS; the metric study's zero-clamping row says how to read it | 7 min |
+| **the loss region** | does masking help, and how much? | loss over the object only; loss over object + table | the working run (full-frame loss) | object-region submetrics | 14 min |
+| **the input** | does handling the mosaic help? | mosaic + an aligned bilinear color interpolation as extra input planes | the working run | all regions; the render-side metrics are expected to move most | 7 min |
 
-T1–T3 ≈ 30 min of GPU; T4–T6 ≈ 3.3 h; T8 last, once nothing upstream is
-going to change (a change would otherwise cost the seeds again).
+Decision point after these: whichever clamp setting wins becomes the
+setting for the long runs. If that is the unclamped one, the loss-region
+and input runs are repeated under it (≈ 30 min) so the long runs and the
+quick runs share one recipe.
 
-## 4. Secondary — needs its own discussion before it is planned
+## The long runs (1000 epochs each)
 
-**The static-noise discriminator (H1).** Is the late-epoch gain memorized
-static noise? Hard to get right; not on the critical path. Sketch kept for
-the discussion: template T[b, x] = per-(band, column) mean of high-passed
-train GT (August: correlates 0.95–0.998 across images). Eval-only probe on
-T4 checkpoints: stripe presence in the *output* vs epoch, then the same
-checkpoints on an input with T projected out — vanish means copied from the
-input, persist-and-grow means memorized. Training arms (destriped targets;
-per-image randomized stripes) only if the probe is ambiguous. T4's
+| run | question | what changes | compared against | readout that decides | cost |
+|---|---|---|---|---|---|
+| **the long reference** | what do 1000 epochs buy over 100? | nothing but length | the working run | per-region, per-submetric curves over 1000 epochs — *where* the late gains land; confirms split honesty at length | 66 min |
+| **the long masked run** | is the masking gain transient? | the winning loss region from the quick runs | the long reference | the gap at 1000 epochs vs the gap at 100 | 66 min |
+| **the parity run** | did the rewrite preserve the recipe? | the *official* split instead of ours | the August exp-00 record | curve in family with exp-00; Kaggle 0.239 if we submit | 66 min |
+| **the speedup re-measure** | is the ≈1000× real? | one epoch as shipped vs one epoch on our pipeline | — | wall time per epoch; the August per-fix ladder is cited as the record | ≈ 70 min |
+
+## Seeds
+
+Three repeats of the working run with different seeds, run last. They set
+the noise floor for every quick-run comparison. ≈ 21 min.
+
+## Secondary — needs its own discussion before it is planned
+
+**The static-noise question.** Is the late-epoch gain memorized static
+noise (the column stripes shared across the dataset)? Hard to get right;
+not on the critical path. Sketch for the discussion: estimate the
+per-(band, column) stripe template from the training ground truth; probe
+the long reference's checkpoints for stripe presence in the *output*
+across epochs, then feed the same checkpoints an input with the template
+projected out — stripes vanish means copied from the input, stripes persist
+and grow means memorized. Training arms (destriped targets, per-image
+randomized stripes) only if that probe is ambiguous. The long reference's
 per-region train-vs-val curves are a free third angle.
 
-## Open questions
+## Open decisions
 
-- Q1. Unclamped training: inside R0 as a disclosed delta, or its own arm?
-- Q2. T3 at 100 ep only, or also at 1000?
-- Q3. One Kaggle submission on T6 for the external anchor?
+- Should the input ablation also be run at 1000 epochs (another 66 min)?
+- Do we spend one Kaggle submission on the parity run for the external
+  anchor?
