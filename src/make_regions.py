@@ -9,8 +9,12 @@ split a pack; they are expanded ×2 at load time.
   object      = brightness > THRESH  →  open r1  →  close r20  →  fill holes
                 →  largest component  →  [convex hull]  →  dilate MARGIN
                 (the object together with the sheet it stands on)
-  table       = the full-width band of TABLE_H rows just below the object's
-                lowest row (the dark tabletop the sheet lies on), minus object
+  sheet bottom = the last row where the object mask is at least half its
+                widest row (the sheet is wide; the bright clamp under the
+                tabletop forms a narrow bump below it and must not count)
+  object      = the mask above the sheet bottom
+  table       = the full-width band of TABLE_H rows below the sheet bottom
+                (the dark tabletop and the clamp)
   background  = everything else
 
 Labels: 0 background, 1 object, 2 table (uint8, 512×512).
@@ -64,10 +68,11 @@ def regions(b512, thresh=THRESH, convex=False):
     if convex:
         m = convex_hull(m)
     m = ndi.binary_dilation(m, disk(MARGIN))
-    y_bottom = np.flatnonzero(m.any(axis=1))[-1]
+    width = m.sum(axis=1)
+    y_bottom = np.flatnonzero(width >= 0.5 * width.max())[-1]          # sheet bottom
     lbl = np.zeros(m.shape, np.uint8)
     lbl[y_bottom + 1:y_bottom + 1 + TABLE_H, :] = 2
-    lbl[m] = 1
+    lbl[:y_bottom + 1][m[:y_bottom + 1]] = 1
     return lbl, int(y_bottom)
 
 
