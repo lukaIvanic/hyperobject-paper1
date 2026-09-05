@@ -46,3 +46,17 @@ Dated entries, newest last. What was done, what was found, what changed.
 - Cache built with `src/build_cache.py`: 178 cubes + 182 mosaics → 46.3 GB
   in 28 s wall (4.4 s per cube in-worker, 32 workers); every file read back
   and compared bit-for-bit. Disk at 116 GB of 600 used.
+- Split manifests copied from August (`data/split/`): 166 train incl. the 11
+  public-test images, 12 val (1 apple, 1 glass, 5 books, 5 misc).
+- Regions built with `src/make_regions.py` (26 s for 178 images): object =
+  brightness > 0.09 on the 2×2-pack grid, open 1, close 20, fill, largest
+  component, dilate 3 blocks; sheet bottom = last row at ≥ 50 % of the mask's
+  max width (a first version used the mask's lowest row, which the bright
+  clamp under the tabletop pulled ~60 px too low); table = 80 px band below
+  the sheet bottom; background = rest. Sheet bottom lands at 826–850 px on
+  172 of 178 images; outliers: the three convex-hull overrides (874–880),
+  `Category-1_a_0027` (864), `Category-3_a_0042` (884), and the glass sliver
+  `Category-3_a_0054` (988). Object 1–74 % of the frame, table 3–8 %.
+- Audit material on the Mac: `data/audit/images/<stem>.png` (178, one per
+  image, git-ignored) and `data/audit/Category-*.png` (contact sheets,
+  committed). Luka audits every image and flags those needing adjustment.
