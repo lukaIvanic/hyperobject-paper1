@@ -9,11 +9,13 @@ split a pack; they are expanded ×2 at load time.
   object      = brightness > THRESH  →  open r1  →  close r20  →  fill holes
                 →  largest component  →  [convex hull]  →  dilate MARGIN
                 (the object together with the sheet it stands on)
-  sheet bottom = the last row where the object mask is at least half its
-                widest row (the sheet is wide; the bright clamp under the
-                tabletop forms a narrow bump below it and must not count)
-  object      = the mask above the sheet bottom
-  table       = the full-width band of TABLE_H rows below the sheet bottom
+  sheet bottom = a straight line fitted to the mask's lowest row per column
+                (robustly: the bright clamp under the tabletop forms a narrow
+                bump below the sheet and is dropped as an outlier). A line,
+                not a row, because the tabletop is tilted a few degrees in
+                some images.
+  object      = the mask above the sheet-bottom line, [convex hull], dilated
+  table       = the band of TABLE_H rows below the line, full width
                 (the dark tabletop and the clamp)
   background  = everything else
 
@@ -24,8 +26,10 @@ Writes  data/masks/regions.npz          {stem: uint8 (512, 512)}, compressed
         data/masks/stats.csv            per-image fractions and the object's bottom row
         data/audit/images/<stem>.png    per-image audit figure: render + log-brightness, region contours
         data/audit/<category>.png       contact sheets of the same
-Per-image exceptions (dark objects that the threshold clips) are in
-data/masks/overrides.yaml, each with a reason.
+Per-image exceptions are in data/masks/overrides.yaml, each with a reason:
+`thresh` (lower for dark objects), `convex` (hull), `polygon` (full-res
+[x, y] vertices unioned into the mask before the morphology, for objects the
+brightness rule cannot find).
 
 Usage: python src/make_regions.py [cache_root]
 """
@@ -35,6 +39,7 @@ from pathlib import Path
 import numpy as np, yaml
 from scipy import ndimage as ndi
 from scipy.spatial import ConvexHull, Delaunay
+from matplotlib.path import Path as MplPath
 
 sys.path.insert(0, str(Path(__file__).parent))
 from official_ssc.render import render_srgb_preview
@@ -57,23 +62,39 @@ def convex_hull(m):
     return hull.find_simplex(np.column_stack([yy.ravel(), xx.ravel()])).reshape(m.shape) >= 0
 
 
-def regions(b512, thresh=THRESH, convex=False):
+def sheet_bottom_line(m):
+    """y = a·x + b (block units) through the mask's lowest row per column."""
+    xs = np.flatnonzero(m.any(axis=0))
+    ys = np.array([np.flatnonzero(m[:, x])[-1] for x in xs])
+    keep = ys <= np.percentile(ys, 75)                      # drop the clamp bump (lowest 25 %)
+    for _ in range(2):
+        a, b = np.polyfit(xs[keep], ys[keep], 1)
+        keep = np.abs(ys - (a * xs + b)) <= 4                # re-include the sheet's far end, drop outliers
+    return a, b
+
+
+def regions(b512, thresh=THRESH, convex=False, polygon=None):
     m = b512 > thresh
+    if polygon is not None:                                  # full-res vertices → 512 grid
+        yy, xx = np.mgrid[:512, :512]
+        m |= MplPath(np.asarray(polygon) / 2).contains_points(np.column_stack([xx.ravel(), yy.ravel()])).reshape(512, 512)
     m = ndi.binary_opening(m, disk(R_OPEN))
     m = ndi.binary_closing(m, disk(R_CLOSE))
     m = ndi.binary_fill_holes(m)
     lab, n = ndi.label(m)
     assert n >= 1
     m = lab == (np.argmax(ndi.sum_labels(m, lab, range(1, n + 1))) + 1)
+    a, b = sheet_bottom_line(m)                              # from the raw mask: hull/dilation must not move it
+    yy, xx = np.mgrid[:512, :512]
+    line = a * xx + b
+    m &= yy <= line                                          # drop the clamp bump under the sheet
     if convex:
         m = convex_hull(m)
     m = ndi.binary_dilation(m, disk(MARGIN))
-    width = m.sum(axis=1)
-    y_bottom = np.flatnonzero(width >= 0.5 * width.max())[-1]          # sheet bottom
     lbl = np.zeros(m.shape, np.uint8)
-    lbl[y_bottom + 1:y_bottom + 1 + TABLE_H, :] = 2
-    lbl[:y_bottom + 1][m[:y_bottom + 1]] = 1
-    return lbl, int(y_bottom)
+    lbl[(yy > line) & (yy <= line + TABLE_H)] = 2
+    lbl[m & (yy <= line)] = 1
+    return lbl, int(round(a * 256 + b))                      # sheet bottom at the image centre
 
 
 def one(item):
@@ -95,7 +116,7 @@ def audit_figure(stem, lbl, y_bottom, rgb, b512, out):
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
     fig, (a, b) = plt.subplots(1, 2, figsize=(13, 6.6))
     a.imshow(np.clip(rgb, 0, 1) ** (1 / 1.8)); contours(a, lbl)
-    a.set_title(f"{stem}   object {100 * (lbl == 1).mean():.1f}%   table {100 * (lbl == 2).mean():.1f}%   y_bottom={2 * y_bottom}")
+    a.set_title(f"{stem}   object {100 * (lbl == 1).mean():.1f}%   table {100 * (lbl == 2).mean():.1f}%   y_bottom={2 * y_bottom} (centre)")
     b.imshow(np.log10(np.maximum(b512, 1e-4)), cmap="gray"); contours(b, lbl)
     b.set_title(f"log10 block brightness (thresh {THRESH})")
     for ax in (a, b):

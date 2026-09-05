@@ -134,7 +134,6 @@ train/Category-3_a_0050
 train/Category-3_a_0051
 train/Category-3_a_0052
 train/Category-3_a_0053
-train/Category-3_a_0054
 train/Category-3_a_0055
 train/Category-3_a_0056
 train/Category-3_a_0058

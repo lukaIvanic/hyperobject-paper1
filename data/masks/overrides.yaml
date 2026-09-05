@@ -1,19 +1,102 @@
 # Per-image exceptions to the default region recipe in src/make_regions.py.
-# Keys are recipe parameters; "reason" is documentation only.
-# Carried over from the August audit (2026-08-30), to be re-checked on the
-# new contact sheets.
+# Keys are recipe parameters (thresh, convex, polygon = full-res [x, y]
+# vertices unioned into the mask); "reason" is documentation only.
+# Category-3_a_0054 (a sliver of the glass at the frame edge, no table) is
+# not overridden but removed from data/split/train.txt.
 
+Category-2_a_0029:
+  convex: true
+  reason: dark book laid flat; threshold mask has holes and misses the dark top — a book is convex (audit 2026-09-05)
+Category-2_a_0030:
+  convex: true
+  reason: dark upright book; threshold mask follows only the bright print (audit 2026-09-05)
+Category-2_a_0031:
+  convex: true
+  reason: book laid flat; dark top face partly cut (audit 2026-09-05)
+Category-2_a_0032:
+  convex: true
+  reason: upright book flagged in the audit (2026-09-05); hull is exact for a rectangle either way
 Category-4_a_0005:
-  thresh: 0.06
-  convex: true
-  reason: dark headset strap; its top sits barely above background brightness (≈0.05 vs 0.045) and thresh 0.09 clips it
-
+  polygon:
+  - - 253
+    - 774
+  - - 244
+    - 628
+  - - 269
+    - 465
+  - - 350
+    - 367
+  - - 465
+    - 342
+  - - 546
+    - 350
+  - - 644
+    - 399
+  - - 709
+    - 465
+  - - 774
+    - 562
+  - - 856
+    - 676
+  - - 864
+    - 742
+  - - 791
+    - 791
+  - - 693
+    - 742
+  - - 628
+    - 676
+  - - 562
+    - 628
+  - - 497
+    - 619
+  - - 432
+    - 644
+  - - 367
+    - 701
+  - - 302
+    - 782
+  reason: dark headset strap sits at background brightness; hand-drawn polygon (audit 2026-09-05), replaces August's thresh
+    0.06 + hull which swallowed a background triangle
 Category-4_a_0026:
-  thresh: 0.06
-  convex: true
-  reason: sunglasses (dark); same as above
-
+  polygon:
+  - - 326
+    - 791
+  - - 318
+    - 725
+  - - 367
+    - 619
+  - - 465
+    - 595
+  - - 546
+    - 603
+  - - 628
+    - 619
+  - - 709
+    - 660
+  - - 758
+    - 742
+  - - 750
+    - 791
+  reason: dark sunglasses; hand-drawn polygon (audit 2026-09-05), replaces August's hull
 Category-4_a_0029:
-  thresh: 0.06
-  convex: true
-  reason: sunglasses (dark), second pose; same as above
+  polygon:
+  - - 277
+    - 791
+  - - 285
+    - 660
+  - - 350
+    - 619
+  - - 481
+    - 619
+  - - 538
+    - 660
+  - - 570
+    - 628
+  - - 709
+    - 619
+  - - 791
+    - 676
+  - - 799
+    - 791
+  reason: dark sunglasses, second pose; hand-drawn polygon (audit 2026-09-05), replaces August's hull
