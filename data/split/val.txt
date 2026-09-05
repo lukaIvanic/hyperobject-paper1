@@ -1,0 +1,12 @@
+train/Category-1_a_0030
+train/Category-2_a_0002
+train/Category-2_a_0006
+train/Category-2_a_0013
+train/Category-2_a_0020
+train/Category-2_a_0028
+train/Category-3_a_0030
+train/Category-4_a_0001
+train/Category-4_a_0006
+train/Category-4_a_0014
+train/Category-4_a_0017
+train/Category-4_a_0024
