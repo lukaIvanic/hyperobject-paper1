@@ -14,7 +14,12 @@ Frozen choices. Each has a date and a one-line reason. Change = new dated entry,
   would allow extra analysis; rejected for simplicity.)
 - **2026-09-03 · Split.** Our own train/val split, val weighted toward
   categories 2 and 4 (novel objects); categories 1 and 3 are re-posed copies of a
-  few objects. Exact manifest to be produced in `data/`.
+  few objects. Manifest in `data/split/` (165 train / 12 val).
+
+- **2026-09-05 · Regions locked.** Recipe in `src/make_regions.py` (per-image
+  fitted sheet-bottom line, 80 px table band, convex hull for books) plus six
+  hand-drawn polygon overrides, approved image by image over three audit
+  rounds. Not touched again within Paper 1.
 
 ## Training
 

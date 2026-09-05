@@ -96,7 +96,7 @@ H4. The SSC score is doubly sensitive: submetrics (SAM, SID, ERGAS) blow up
 - Every ported file gets a provenance line; every number in the paper traces
   to a committed log.
 
-## Next
+## Next (all done by 2026-09-05 — see `04-log.md`)
 
 1. Freeze decisions → `01-decisions.md` (regions, split, recipe, epochs).
 2. Data prep: masks with table region for all images; manifests in `data/`.

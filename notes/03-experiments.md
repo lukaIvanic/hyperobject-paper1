@@ -1,4 +1,4 @@
-# Experiment plan (v3, 2026-09-04 — under discussion)
+# Experiment plan (v3, 2026-09-04, agreed)
 
 Referencing convention: number *and* name, e.g. "T2 (the clamp ablation)",
 "M8 (zero-clamping)". M = metric-study rows, T = training runs.
@@ -45,18 +45,9 @@ one thing against a named comparison run.
 
 ## Data prep
 
-- Region masks for all 178 images. *Object* = the August recipe
-  (brightness threshold on the ground truth, morphology, aligned to the
-  2×2 filter pattern); the white sheet stays inside the object. *Table* =
-  the dark rail and clamp below the sheet, cut by a row boundary — a
-  single constant row is only the starting guess, the rig moves in some
-  images, so each cut is checked on contact sheets. *Background* = the
-  rest.
-- Split manifest: validation weighted toward categories 2 and 4 (the novel
-  objects); never two adjacent indices (adjacent = the same book, cover and
-  spine); category-4 picks prefer single-shot objects; the 11 official
-  public-test images fold into training.
-- Contact sheets for a visual sign-off before anything runs.
+Done 2026-09-05 (see `04-log.md`): 165 / 12 split in `data/split/`, three
+regions per image in `data/masks/`, approved image by image over three audit
+rounds.
 
 ## The metric study (M1–M9) — what does a score mean?
 

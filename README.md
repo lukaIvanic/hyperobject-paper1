@@ -5,7 +5,7 @@ one frozen data protocol, one frozen recipe; every claim is a controlled
 comparison with the six submetrics as the primary readout.
 
 - `notes/` — thinking, decisions, experiment plan (start with `notes/00-start.md`)
-- `data/` — split manifests, masks (committed, small)
+- `data/` — split manifests, region masks + overrides, audit contact sheets (committed, small)
 - `src/` — ported code, cleaned; provenance of every file in `notes/02-provenance.md`
 - `runs/` — checkpoints on the box (ignored); `logs/` — per-run CSV/log (committed)
 - `figs/` — figures; `paper/` — the write-up (Typst)
