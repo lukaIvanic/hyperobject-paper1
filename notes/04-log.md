@@ -60,3 +60,13 @@ Dated entries, newest last. What was done, what was found, what changed.
 - Audit material on the Mac: `data/audit/images/<stem>.png` (178, one per
   image, git-ignored) and `data/audit/Category-*.png` (contact sheets,
   committed). Luka audits every image and flags those needing adjustment.
+- Audit round 1 (Luka, all 178 figures). Category 1 and 3 clean; Category-
+  3_a_0054 (glass sliver, no table) removed from the split → 165 train.
+  Category 2: dark books 0029–0032 clipped → convex hull override (a book
+  is a rectangle). Category 4: images up to a_0010 have a tilted tabletop →
+  the sheet bottom is now a per-image fitted line (robust to the clamp
+  bump), not a row; dark objects 0005 (headset), 0026/0029 (sunglasses) →
+  hand-drawn polygon overrides replace August's hull, which had swallowed
+  large background triangles and dragged the table band ~50 px down.
+  Sheet bottom now 818–850 px on all but the glass sliver. Second audit
+  round pending.
