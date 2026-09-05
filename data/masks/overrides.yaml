@@ -1,21 +1,10 @@
 # Per-image exceptions to the default region recipe in src/make_regions.py.
 # Keys are recipe parameters (thresh, convex, polygon = full-res [x, y]
 # vertices unioned into the mask); "reason" is documentation only.
+# Category-wide rules live in the script (convex hull for all books).
 # Category-3_a_0054 (a sliver of the glass at the frame edge, no table) is
 # not overridden but removed from data/split/train.txt.
 
-Category-2_a_0029:
-  convex: true
-  reason: dark book laid flat; threshold mask has holes and misses the dark top — a book is convex (audit 2026-09-05)
-Category-2_a_0030:
-  convex: true
-  reason: dark upright book; threshold mask follows only the bright print (audit 2026-09-05)
-Category-2_a_0031:
-  convex: true
-  reason: book laid flat; dark top face partly cut (audit 2026-09-05)
-Category-2_a_0032:
-  convex: true
-  reason: upright book flagged in the audit (2026-09-05); hull is exact for a rectangle either way
 Category-4_a_0005:
   polygon:
   - - 253

@@ -14,7 +14,9 @@ split a pack; they are expanded ×2 at load time.
                 bump below the sheet and is dropped as an outlier). A line,
                 not a row, because the tabletop is tilted a few degrees in
                 some images.
-  object      = the mask above the sheet-bottom line, [convex hull], dilated
+  object      = the mask above the sheet-bottom line, convex hull for the
+                book category (dark covers and top faces fall below the
+                threshold; a book is convex), dilated
   table       = the band of TABLE_H rows below the line, full width
                 (the dark tabletop and the clamp)
   background  = everything else
@@ -47,6 +49,7 @@ from official_ssc.render import render_srgb_preview
 ROOT = Path(__file__).resolve().parents[1]
 CACHE = Path(sys.argv[1] if len(sys.argv) > 1 else "/root/data/cache")
 THRESH, R_OPEN, R_CLOSE, MARGIN, TABLE_H = 0.09, 1, 20, 3, 40   # block units; TABLE_H = 80 px
+CONVEX_CATEGORIES = {"Category-2"}   # books are boxes: the brightness rule loses their dark faces, the hull restores them
 WL = np.arange(400, 1001, 10, dtype=np.float32)
 
 
@@ -101,7 +104,7 @@ def one(item):
     split, stem, override = item
     cube = np.load(CACHE / split / "cube" / f"{stem}.npy", mmap_mode="r")
     b512 = np.asarray(cube).mean(axis=2).reshape(512, 2, 512, 2).mean(axis=(1, 3))
-    lbl, y_bottom = regions(b512, **override)
+    lbl, y_bottom = regions(b512, **{"convex": stem.split("_")[0] in CONVEX_CATEGORIES, **override})
     rgb = render_srgb_preview(np.transpose(cube, (2, 0, 1)), WL)[::2, ::2]   # 512² preview
     audit_figure(stem, lbl, y_bottom, rgb, b512, ROOT / f"data/audit/images/{stem}.png")
     return stem, lbl, y_bottom, rgb[::2, ::2]
