@@ -27,3 +27,19 @@ Dated entries, newest last. What was done, what was found, what changed.
 - Next: `src/build_cache.py` — one uncompressed `.npy` per cube (HWC
   contiguous, so it pins zero-copy as a channels-last tensor), verified
   against the HDF5 read; then regions and split.
+
+## 2026-09-05 — box lost and re-created
+
+- Restarting the stopped instance 49861988 failed: its GPU had been rented
+  by someone else in the meantime ("required resources unavailable",
+  queued indefinitely). Same failure mode as the August box. Lesson:
+  vast.ai keeps the disk on stop, not the GPU. Policy from now on:
+  instances are disposable — rent when working, destroy when done; the
+  repo holds everything that matters; re-setup is ≈10 min.
+- New instance 49952327 (California): RTX 5090, 48 cores, 137 GB RAM,
+  600 GB disk (1.2 GB/s write, 390 MB/s read), ≈$0.72/h. New deploy key;
+  the old key was removed from GitHub; the old instance was destroyed
+  after the data was verified here.
+- Data re-downloaded (37.1 GB in 315 s) and extracted (116 s). Verified:
+  167 + 11 cubes, 167 + 11 + 4 mosaics, cube (1024, 1024, 61) float32,
+  wavelengths 400…1000 nm — identical to yesterday.
