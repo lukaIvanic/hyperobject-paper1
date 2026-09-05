@@ -25,7 +25,7 @@ white sheet.
                       floored at t (t = 0.005, 0.02)
   M9 constant cubes   zeros, the training-mean spectrum, ones
 
-Reads   /root/data/cache/train/cube/<stem>.npy, data/split/{train,val}.txt,
+Reads   /root/data/cache/<split>/cube/<stem>.npy, data/split/{train,val}.txt,
         data/masks/regions.npz
 Writes  logs/metric_study.csv               one line per (row, knob, image, region)
         logs/metric_study_mean.csv          the same averaged over the 12 images
@@ -49,15 +49,20 @@ REGIONS = ("full", "object", "table", "background")
 COLS = score.METRICS + score.SCORES
 
 
+def path(stem):                                              # "train/Category-1_a_0030" -> cache file
+    split, name = stem.split("/")
+    return CACHE / split / "cube" / f"{name}.npy"
+
+
 def load(stem):
-    return torch.from_numpy(np.load(CACHE / f"{stem}.npy")).to(DEV)
+    return torch.from_numpy(np.load(path(stem))).to(DEV)
 
 
 def train_stats(stems):
     """Mean spectrum and PCA basis of the training set (every 8th row of every cube, fp64)."""
     n, s, ss = 0, torch.zeros(61, dtype=torch.float64, device=DEV), torch.zeros(61, 61, dtype=torch.float64, device=DEV)
     for stem in stems:
-        x = torch.from_numpy(np.ascontiguousarray(np.load(CACHE / f"{stem}.npy", mmap_mode="r")[::8])).to(DEV).reshape(-1, 61).double()
+        x = torch.from_numpy(np.ascontiguousarray(np.load(path(stem), mmap_mode="r")[::8])).to(DEV).reshape(-1, 61).double()
         n += len(x); s += x.sum(0); ss += x.T @ x
     mean = s / n
     cov = ss / n - mean[:, None] * mean[None, :]
