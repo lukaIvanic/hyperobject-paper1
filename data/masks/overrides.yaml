@@ -1,0 +1,19 @@
+# Per-image exceptions to the default region recipe in src/make_regions.py.
+# Keys are recipe parameters; "reason" is documentation only.
+# Carried over from the August audit (2026-08-30), to be re-checked on the
+# new contact sheets.
+
+Category-4_a_0005:
+  thresh: 0.06
+  convex: true
+  reason: dark headset strap; its top sits barely above background brightness (≈0.05 vs 0.045) and thresh 0.09 clips it
+
+Category-4_a_0026:
+  thresh: 0.06
+  convex: true
+  reason: sunglasses (dark); same as above
+
+Category-4_a_0029:
+  thresh: 0.06
+  convex: true
+  reason: sunglasses (dark), second pose; same as above
