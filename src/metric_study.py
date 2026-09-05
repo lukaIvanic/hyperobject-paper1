@@ -16,9 +16,11 @@ white sheet.
                       of the training set (k = 30, 12, 8, 4, 2)
   M4 added noise      iid Gaussian, σ = 0.001 … 0.05 (reflectance units)
   M5 smoothing        spatial Gaussian blur of every band, σ = 0.5 … 4 px
-  M6 destriping       the per-band column profile, high-passed across
-                      columns (σ = 8), subtracted: the ground truth minus its
-                      own stripes
+  M6 destriping       the stripe pattern (per-band column profile,
+                      high-passed across columns with σ = 8) subtracted: the
+                      image's own pattern, or the dataset template averaged
+                      over the 165 training cubes — the ground truth minus
+                      its stripes
   M7 gain error       ×(1+ε) globally (ε = ±1, ±3, ±10 %) and per band with
                       random signs (|ε| = 1, 3, 10 %)
   M8 zero-clamping    values below t set to 0 (t = 0.001 … 0.02), and
@@ -59,16 +61,18 @@ def load(stem):
 
 
 def train_stats(stems):
-    """Mean spectrum and PCA basis of the training set (every 8th row of every cube, fp64)."""
-    n, s, ss = 0, torch.zeros(61, dtype=torch.float64, device=DEV), torch.zeros(61, 61, dtype=torch.float64, device=DEV)
+    """Mean spectrum, PCA basis and stripe template of the training set (every 8th row of every cube, fp64)."""
+    z = lambda *shape: torch.zeros(*shape, dtype=torch.float64, device=DEV)
+    n, s, ss, prof = 0, z(61), z(61, 61), z(1024, 61)
     for stem in stems:
-        x = torch.from_numpy(np.ascontiguousarray(np.load(path(stem), mmap_mode="r")[::8])).to(DEV).reshape(-1, 61).double()
+        x8 = torch.from_numpy(np.ascontiguousarray(np.load(path(stem), mmap_mode="r")[::8])).to(DEV).double()
+        prof += x8.mean(0); x = x8.reshape(-1, 61)
         n += len(x); s += x.sum(0); ss += x.T @ x
     mean = s / n
     cov = ss / n - mean[:, None] * mean[None, :]
     evals, evecs = torch.linalg.eigh(cov)                     # ascending
     explained = evals.flip(0).cumsum(0) / evals.sum()
-    return mean.float(), evecs.flip(1).float(), explained.cpu().numpy()
+    return mean.float(), evecs.flip(1).float(), explained.cpu().numpy(), stripes(prof.float() / len(stems))
 
 
 # ---------------------------------------------------------------- degradations, (H, W, 61) -> (H, W, 61)
@@ -112,14 +116,17 @@ def blur(x, sigma):
     return c[:, 0].permute(1, 2, 0)
 
 
-def destripe(x, sigma=8):
-    prof = x.mean(0).T[:, None]                              # (61, 1, W) column profile per band
-    g, r = gauss1d(sigma)
-    smooth = F.conv1d(F.pad(prof, (r, r), mode="reflect"), g[None, None, :])
-    return x - (prof - smooth)[:, 0].T[None]
+def stripes(prof, sigma=8):
+    """(W, 61) column profile -> its high-pass across columns: the stripe pattern."""
+    p = prof.T[:, None]; g, r = gauss1d(sigma)               # (61, 1, W)
+    return (p - F.conv1d(F.pad(p, (r, r), mode="reflect"), g[None, None, :]))[:, 0].T
 
 
-def rows(mean, basis, gen):
+def destripe(x, template=None):
+    return x - (stripes(x.mean(0)) if template is None else template)[None]
+
+
+def rows(mean, basis, template, gen):
     """(row, name, knob, function) in sweep order."""
     signs = torch.tensor(np.random.default_rng(0).choice([-1.0, 1.0], 61), dtype=torch.float32, device=DEV)
     R = []
@@ -130,7 +137,8 @@ def rows(mean, basis, gen):
     for k in (30, 12, 8, 4, 2): add("M3", "low-rank", f"k={k}", lambda x, k=k: low_rank(x, k, mean, basis))
     for s in (0.001, 0.003, 0.01, 0.03, 0.05): add("M4", "added noise", f"sigma {s:g}", lambda x, s=s: x + s * torch.randn(x.shape, generator=gen, device=DEV))
     for s in (0.5, 1, 2, 4): add("M5", "smoothing", f"sigma {s:g}px", lambda x, s=s: blur(x, s))
-    add("M6", "destriping", "column profile", destripe)
+    add("M6", "destriping", "own profile", destripe)
+    add("M6", "destriping", "train template", lambda x: destripe(x, template))
     for e in (0.01, -0.01, 0.03, -0.03, 0.1, -0.1): add("M7", "gain error", f"global {e:+.0%}", lambda x, e=e: x * (1 + e))
     for e in (0.01, 0.03, 0.1): add("M7", "gain error", f"per band {e:.0%}", lambda x, e=e: x * (1 + e * signs))
     for t in (0.001, 0.003, 0.01, 0.02): add("M8", "zero-clamping", f"zero <{t:g}", lambda x, t=t: torch.where(x < t, torch.zeros_like(x), x))
@@ -174,11 +182,11 @@ if __name__ == "__main__":
     train = [l.strip() for l in (ROOT / "data/split/train.txt").read_text().split()]
     val = [l.strip() for l in (ROOT / "data/split/val.txt").read_text().split()]
     lbl = np.load(ROOT / "data/masks/regions.npz")
-    mean, basis, explained = train_stats(train)
+    mean, basis, explained, template = train_stats(train)
     print(f"train stats from {len(train)} cubes in {time.time() - t0:.0f}s; PCA variance explained: "
           + ", ".join(f"k={k} {explained[k - 1]:.5f}" for k in (2, 4, 8, 12, 30)))
     gen = torch.Generator(device=DEV).manual_seed(0)
-    R = rows(mean, basis, gen)
+    R = rows(mean, basis, template, gen)
     (ROOT / "logs").mkdir(exist_ok=True); (ROOT / "figs").mkdir(exist_ok=True)
     rows_out = []
     with open(ROOT / "logs/metric_study_noise_decile.csv", "w", newline="") as fd:
