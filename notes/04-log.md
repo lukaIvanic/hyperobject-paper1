@@ -59,3 +59,6 @@ deployment differs from the formula at the floor (unresolved, stated as such).
 M2 (dropped bands) is not monotonic in the count: which bands matters more than
 how many. M1 "drop" rows refill from the original neighbours, so they are mild
 by construction.
+
+Written up in `notes/sensitivity_analysis/` (overview + one file per family, with
+example and result figures from `src/metric_study_figs.py`).
