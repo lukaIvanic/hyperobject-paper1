@@ -40,3 +40,22 @@ Result: object 1–75 % of the frame, table 4–8 %, sheet bottom 818–850 px o
 every image in the split. Data prep done.
 
 Next: the metric study (M1–M9).
+
+## 2026-09-05 — metric study (M1–M9) run
+
+`src/score.py`: the official formula in torch, per region; parity with the
+numpy reference on one image within 1e-4 on every component. `src/metric_study.py`:
+43 rows × 12 val images × 4 regions in 12 s; outputs in `logs/metric_study*.csv`,
+`figs/metric_study.png`. First reading (object / full frame SSC):
+noise σ 0.003 → 0.90 / 0.41, σ 0.01 → 0.66 / 0.04 — the dark table and background
+pixels carry the full-frame score (SAM 32° in the darkest brightness decile vs 1° in
+the brightest, same σ); zero-clamping below 0.01 is free on the object (0.997) but
+collapses the full frame (0.08) through SID on exact zeros, a floor at 0.005 is
+harmless everywhere; the ground truth minus the dataset's static stripe template
+scores 0.84 / 0.37; a ±3 % global gain costs 0.25 through ERGAS alone; k = 4
+principal components (99.3 % of variance) score 0.27 / 0.05; constant cubes score
+0.000–0.004 locally where Kaggle gave 0.140 / 0.140 / 0.091 — the leaderboard's
+deployment differs from the formula at the floor (unresolved, stated as such).
+M2 (dropped bands) is not monotonic in the count: which bands matters more than
+how many. M1 "drop" rows refill from the original neighbours, so they are mild
+by construction.

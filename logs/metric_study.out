@@ -1,0 +1,57 @@
+train stats from 165 cubes in 1s; PCA variance explained: k=2 0.96731, k=4 0.99269, k=8 0.99833, k=12 0.99928, k=30 0.99995
+train/Category-1_a_0030  43 rows  2s
+train/Category-2_a_0002  43 rows  3s
+train/Category-2_a_0006  43 rows  4s
+train/Category-2_a_0013  43 rows  4s
+train/Category-2_a_0020  43 rows  5s
+train/Category-2_a_0028  43 rows  6s
+train/Category-3_a_0030  43 rows  7s
+train/Category-4_a_0001  43 rows  8s
+train/Category-4_a_0006  43 rows  9s
+train/Category-4_a_0014  43 rows  9s
+train/Category-4_a_0017  43 rows  10s
+train/Category-4_a_0024  43 rows  11s
+43 rows × 12 images × 4 regions in 12s
+M1        drop 0.01  SAM   0.02  SID  0.00001  ERGAS   0.29  PSNR  64.0  SSIM 0.9999  dE  0.01  SSC 0.983   (object)
+M1         drop 0.1  SAM   0.13  SID  0.00012  ERGAS   0.93  PSNR  53.9  SSIM 0.9992  dE  0.06  SSC 0.941   (object)
+M1         drop 0.5  SAM   0.65  SID  0.00059  ERGAS   2.08  PSNR  46.9  SSIM 0.9959  dE  0.28  SSC 0.840   (object)
+M1           pool 2  SAM   1.44  SID  0.00146  ERGAS   4.31  PSNR  39.7  SSIM 0.9835  dE  0.79  SSC 0.671   (object)
+M1           pool 4  SAM   2.14  SID  0.00365  ERGAS  10.24  PSNR  31.5  SSIM 0.9293  dE  1.71  SSC 0.423   (object)
+M1           pool 8  SAM   3.14  SID  0.00962  ERGAS  19.85  PSNR  25.5  SSIM 0.8250  dE  3.36  SSC 0.207   (object)
+M2         every 10  SAM   1.16  SID  0.00102  ERGAS   1.93  PSNR  48.0  SSIM 0.9991  dE  1.06  SSC 0.803   (object)
+M2          every 4  SAM   1.19  SID  0.00084  ERGAS   2.34  PSNR  49.5  SSIM 0.9986  dE  0.59  SSC 0.809   (object)
+M2          every 2  SAM   1.91  SID  0.00210  ERGAS   3.25  PSNR  46.1  SSIM 0.9975  dE  1.10  SSC 0.714   (object)
+M3             k=30  SAM   0.50  SID  0.00020  ERGAS   0.98  PSNR  74.6  SSIM 1.0000  dE  0.02  SSC 0.929   (object)
+M3             k=12  SAM   1.79  SID  0.00370  ERGAS   3.88  PSNR  47.9  SSIM 0.9974  dE  0.55  SSC 0.707   (object)
+M3              k=8  SAM   2.54  SID  0.00969  ERGAS   5.72  PSNR  36.5  SSIM 0.9818  dE  2.09  SSC 0.517   (object)
+M3              k=4  SAM   5.20  SID  0.02704  ERGAS  11.69  PSNR  31.0  SSIM 0.9653  dE  3.80  SSC 0.274   (object)
+M3              k=2  SAM  11.13  SID  0.11079  ERGAS  35.19  PSNR  18.7  SSIM 0.8734  dE 15.67  SSC 0.056   (object)
+M4      sigma 0.001  SAM   0.26  SID  0.00007  ERGAS   0.33  PSNR  63.0  SSIM 0.9996  dE  0.11  SSC 0.968   (object)
+M4      sigma 0.003  SAM   0.77  SID  0.00061  ERGAS   0.99  PSNR  53.5  SSIM 0.9963  dE  0.32  SSC 0.904   (object)
+M4       sigma 0.01  SAM   2.53  SID  0.00944  ERGAS   3.30  PSNR  43.0  SSIM 0.9647  dE  1.07  SSC 0.657   (object)
+M4       sigma 0.03  SAM   7.06  SID  0.19444  ERGAS   9.72  PSNR  33.9  SSIM 0.8299  dE  2.97  SSC 0.180   (object)
+M4       sigma 0.05  SAM  10.70  SID  0.50987  ERGAS  15.75  PSNR  30.0  SSIM 0.7154  dE  4.56  SSC 0.039   (object)
+M5      sigma 0.5px  SAM   0.52  SID  0.00020  ERGAS   1.22  PSNR  51.3  SSIM 0.9986  dE  0.23  SSC 0.903   (object)
+M5        sigma 1px  SAM   1.36  SID  0.00131  ERGAS   4.09  PSNR  40.1  SSIM 0.9855  dE  0.75  SSC 0.684   (object)
+M5        sigma 2px  SAM   2.07  SID  0.00339  ERGAS   9.57  PSNR  32.0  SSIM 0.9386  dE  1.65  SSC 0.443   (object)
+M5        sigma 4px  SAM   3.06  SID  0.00898  ERGAS  18.48  PSNR  26.0  SSIM 0.8431  dE  3.23  SSC 0.226   (object)
+M6      own profile  SAM   1.54  SID  0.00447  ERGAS   3.59  PSNR  38.4  SSIM 0.9804  dE  0.93  SSC 0.669   (object)
+M6   train template  SAM   1.20  SID  0.00121  ERGAS   1.82  PSNR  50.8  SSIM 0.9953  dE  0.37  SSC 0.843   (object)
+M7       global +1%  SAM   0.01  SID  0.00000  ERGAS   1.25  PSNR  51.9  SSIM 1.0000  dE  0.21  SSC 0.923   (object)
+M7       global -1%  SAM   0.01  SID  0.00000  ERGAS   1.25  PSNR  51.8  SSIM 1.0000  dE  0.21  SSC 0.923   (object)
+M7       global +3%  SAM   0.01  SID  0.00000  ERGAS   3.75  PSNR  42.6  SSIM 0.9998  dE  0.61  SSC 0.751   (object)
+M7       global -3%  SAM   0.01  SID  0.00000  ERGAS   3.75  PSNR  42.2  SSIM 0.9998  dE  0.61  SSC 0.750   (object)
+M7      global +10%  SAM   0.01  SID  0.00000  ERGAS  12.51  PSNR  32.4  SSIM 0.9979  dE  1.97  SSC 0.401   (object)
+M7      global -10%  SAM   0.01  SID  0.00000  ERGAS  12.51  PSNR  31.5  SSIM 0.9981  dE  2.06  SSC 0.396   (object)
+M7      per band 1%  SAM   0.57  SID  0.00010  ERGAS   1.25  PSNR  53.6  SSIM 0.9999  dE  0.56  SSC 0.889   (object)
+M7      per band 3%  SAM   1.69  SID  0.00088  ERGAS   3.75  PSNR  44.1  SSIM 0.9993  dE  1.65  SSC 0.677   (object)
+M7     per band 10%  SAM   5.57  SID  0.00973  ERGAS  12.51  PSNR  33.8  SSIM 0.9965  dE  5.11  SSC 0.266   (object)
+M8      zero <0.001  SAM   0.01  SID  0.00000  ERGAS   0.00  PSNR 120.0  SSIM 1.0000  dE  0.00  SSC 1.000   (object)
+M8      zero <0.003  SAM   0.01  SID  0.00000  ERGAS   0.00  PSNR 119.4  SSIM 1.0000  dE  0.00  SSC 1.000   (object)
+M8       zero <0.01  SAM   0.01  SID  0.00024  ERGAS   0.01  PSNR 104.5  SSIM 1.0000  dE  0.00  SSC 0.997   (object)
+M8       zero <0.02  SAM   0.13  SID  0.02347  ERGAS   0.24  PSNR  64.0  SSIM 0.9976  dE  0.05  SSC 0.889   (object)
+M8      floor 0.005  SAM   0.01  SID  0.00000  ERGAS   0.00  PSNR 119.0  SSIM 1.0000  dE  0.00  SSC 1.000   (object)
+M8       floor 0.02  SAM   0.03  SID  0.00005  ERGAS   0.05  PSNR  81.6  SSIM 0.9999  dE  0.01  SSC 0.996   (object)
+M9            zeros  SAM  90.00  SID 23.62670  ERGAS 125.09  PSNR   4.7  SSIM 0.0130  dE 49.93  SSC 0.000   (object)
+M9       train mean  SAM  17.51  SID  0.20833  ERGAS  99.86  PSNR  10.7  SSIM 0.5970  dE 26.38  SSC 0.003   (object)
+M9             ones  SAM  19.26  SID  0.25749  ERGAS 253.86  PSNR   5.5  SSIM 0.5082  dE 37.20  SSC 0.002   (object)
