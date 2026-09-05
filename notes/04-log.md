@@ -70,3 +70,14 @@ Dated entries, newest last. What was done, what was found, what changed.
   large background triangles and dragged the table band ~50 px down.
   Sheet bottom now 818–850 px on all but the glass sliver. Second audit
   round pending.
+
+## 2026-09-05 — masks, audit round 2 (books)
+
+Luka: Category 4 locked; books still wrong (dark covers / top faces cut).
+Change: convex hull for the whole book category (`CONVEX_CATEGORIES = {"Category-2"}`),
+the four per-book overrides dropped. Result: spines now include their top face
+(a_0011, a_0013, a_0031 …), full covers unchanged. One leftover: a_0026 runs off the
+top of the frame and its upper cover has no bright pixel, so the hull stopped at the
+title text → polygon override for the top strip (object 59 % → 75 %).
+Rerun on the box: 178 images in 27 s; object 1–75 %, table 4–8 %; overrides now
+2_a_0026, 4_a_0005, 4_a_0026, 4_a_0029. Category-2 handed back for re-audit.
