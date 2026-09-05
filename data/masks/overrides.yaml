@@ -89,3 +89,6 @@ Category-4_a_0029:
   - - 799
     - 791
   reason: dark sunglasses, second pose; hand-drawn polygon (audit 2026-09-05), replaces August's hull
+Category-2_a_0026:
+  polygon: [[33, 0], [1002, 0], [1002, 150], [33, 260]]
+  reason: book runs off the top of the frame; its dark upper cover has no bright pixels, so even the hull stops at the title text
