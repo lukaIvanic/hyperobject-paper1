@@ -81,3 +81,14 @@ top of the frame and its upper cover has no bright pixel, so the hull stopped at
 title text → polygon override for the top strip (object 59 % → 75 %).
 Rerun on the box: 178 images in 27 s; object 1–75 %, table 4–8 %; overrides now
 2_a_0026, 4_a_0005, 4_a_0026, 4_a_0029. Category-2 handed back for re-audit.
+
+## 2026-09-05 — masks, audit round 3 (books) → LOCKED
+
+Luka: two book tops to fix, everything else good. a_0007: flat top at the level of
+the top-left corner (the hull sagged at the dark top-right). a_0029: slanted top
+line through the highest point, extended to both ends. Both as polygon overrides;
+before/after shown and approved. Masks locked: 178 regions, 6 overrides
+(2_a_0007, 2_a_0026, 2_a_0029, 4_a_0005, 4_a_0026, 4_a_0029), object 1–75 %,
+table 4–8 %, sheet bottom 818–850 px on every image in the split.
+Data prep done: cache (build_cache.py), split (165 train / 12 val), regions.
+Next: metric study script (M1–M9).
