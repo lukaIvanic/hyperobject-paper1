@@ -170,10 +170,9 @@ def figure(mean_rows, out):
             for reg in REGIONS:
                 ax.plot(range(len(knobs)), [float(r[met]) for r in sub if r["region"] == reg], "o-", ms=3, label=reg)
             ax.set_xticks(range(len(knobs))); ax.set_xticklabels(knobs, rotation=40, ha="right", fontsize=6)
-            ax.tick_params(axis="y", labelsize=7); ax.grid(alpha=0.3)
+            ax.tick_params(axis="y", labelsize=7); ax.grid(alpha=0.3); ax.legend(fontsize=5)
             if i == 0: ax.set_title(met, fontsize=9)
             if j == 0: ax.set_ylabel(f"{row} {sub[0]['name']}", fontsize=8)
-    axes[0, 0].legend(fontsize=6)
     fig.tight_layout(); fig.savefig(out, dpi=110); plt.close(fig)
 
 

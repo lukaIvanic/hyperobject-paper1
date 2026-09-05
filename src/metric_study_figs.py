@@ -74,14 +74,13 @@ def results_figure(rows, title, out):
         for reg in ms.REGIONS:
             ax.plot(range(len(knobs)), [float(r[met]) for r in rows if r["region"] == reg], "o-", color=COLORS[reg], ms=4, label=reg)
         ax.set_xticks(range(len(knobs))); ax.set_xticklabels(knobs, rotation=30, ha="right", fontsize=8)
-        ax.set_title(METRIC_TITLES[met], fontsize=9); ax.grid(alpha=0.3)
+        ax.set_title(METRIC_TITLES[met], fontsize=9); ax.grid(alpha=0.3); ax.legend(fontsize=7)
         if met == "SSC": ax.set_ylim(-0.02, 1.02)
     ax = axes[1, 3]
     for comp, ls in (("S_SPEC", "-"), ("S_SPAT", "--"), ("S_DE", ":")):
         ax.plot(range(len(knobs)), [float(r[comp]) for r in rows if r["region"] == "full"], ls, color=COLORS["full"], marker="o", ms=4, label=f"{comp} (full frame)")
     ax.set_xticks(range(len(knobs))); ax.set_xticklabels(knobs, rotation=30, ha="right", fontsize=8); ax.set_ylim(-0.02, 1.02)
     ax.set_title("the three factors of SSC, full frame", fontsize=9); ax.grid(alpha=0.3); ax.legend(fontsize=7)
-    axes[0, 0].legend(fontsize=8)
     fig.suptitle(f"{title}\nmean over the 12 validation images; one line per region", fontsize=11)
     fig.tight_layout(); fig.savefig(out, dpi=100); plt.close(fig)
 
