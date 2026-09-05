@@ -43,3 +43,6 @@ Dated entries, newest last. What was done, what was found, what changed.
 - Data re-downloaded (37.1 GB in 315 s) and extracted (116 s). Verified:
   167 + 11 cubes, 167 + 11 + 4 mosaics, cube (1024, 1024, 61) float32,
   wavelengths 400…1000 nm — identical to yesterday.
+- Cache built with `src/build_cache.py`: 178 cubes + 182 mosaics → 46.3 GB
+  in 28 s wall (4.4 s per cube in-worker, 32 workers); every file read back
+  and compared bit-for-bit. Disk at 116 GB of 600 used.
